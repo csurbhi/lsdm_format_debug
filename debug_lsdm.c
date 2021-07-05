@@ -262,7 +262,8 @@ void read_sb(int fd, unsigned long sectornr)
 		exit(errno);
 	}
 
-	ret = read(fd, sb, BLK_SZ);
+//	ret = read(fd, sb, BLK_SZ);
+        ret = read_from_disk(fd, (char *)sb, BLK_SZ, sectornr);
 	if (ret < 0) {
 		perror("\n COuld not read the sb: ");
 		exit(errno);
