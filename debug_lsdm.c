@@ -613,11 +613,11 @@ int main()
 
 
 
+	/*
 	read_sb(fd, 0);
 	read_sb(fd, 8);
 	read_ckpt(fd, sb1, sb1->ckpt1_pba);
 	read_ckpt(fd, sb1, sb1->ckpt2_pba);
-	/*
     	read_revmap(fd, sb1->revmap_pba, sb1->blk_count_revmap);
 	nrblks = get_nr_blks(sb1);
 	printf("\n nrblks: %lu", nrblks);
