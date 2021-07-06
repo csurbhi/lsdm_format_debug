@@ -562,20 +562,30 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 
 void menu(int fd, unsigned long sectornr, sector_t revmap_pba, unsigned nr_blks, sector_t revmap_bm_pba, unsigned nr_blks_for_bitmap, u64 nr_seg_entries, unsigned long seg_entries_pba){
 	int menuNum;
-	printf("1、Printing_SB\n");
-    printf("2、Printing_Revmap\n");
-    printf("3、Printing_Seg_info_table\n");
-    printf("4、Printing_Revmap_BitMap\n");
+	printf("1. Printing_SB\n");
+    printf("2. Printing_Revmap\n");
+    printf("3. Printing_Seg_info_table\n");
+    printf("4. Printing_Revmap_BitMap\n");
     printf("Input 1-4: ");
     scanf("%d",&menuNum);
 
     switch(menuNum)
     {
-    case 1: read_sb(fd,sectornr);break;
-    case 2: read_revmap(fd, revmap_pba,nr_blks);break;
-    case 3: read_seg_info_table(fd, nr_seg_entries, seg_entries_pba);break;
-    case 4: read_revmap_bitmap(fd, revmap_bm_pba,nr_blks_for_bitmap);break;
-    default:printf("Wrong input!\n");exit(0);break;
+	case 1: 
+		read_sb(fd,sectornr);
+		break;
+    	case 2: 
+		read_revmap(fd, revmap_pba,nr_blks);
+		break;
+	case 3: 
+		read_seg_info_table(fd, nr_seg_entries, seg_entries_pba);
+		break;
+    	case 4: 
+		read_revmap_bitmap(fd, revmap_bm_pba,nr_blks_for_bitmap);
+		break;
+    	default:
+		printf("Wrong input!\n");
+		exit(0);
     }
 }
 
