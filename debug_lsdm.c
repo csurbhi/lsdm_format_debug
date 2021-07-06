@@ -516,15 +516,15 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 	unsigned entries_in_blk = BLK_SZ / sizeof(struct stl_seg_entry);
 	unsigned int nr_sit_blks = (nr_seg_entries)/entries_in_blk;
 	unsigned int i, ret;
+	char * buf;
+	char *orig_addr;
+	size_t size = 0;
+
 	if (nr_seg_entries % entries_in_blk > 0)
 		nr_sit_blks = nr_sit_blks + 1;
 
-	printf("\n nr of seg entries: %llu", nr_seg_entries);
-	printf("\n nr of sit blks: %d", nr_sit_blks);
-	printf("\n");
 
-	char * buf = (char *) malloc(BLK_SZ);
-	char *orig_addr;
+	buf = (char *) malloc(BLK_SZ);
 	if (NULL == buf) {
 		perror("\n Could not malloc: ");
 		exit(-ENOMEM);
@@ -532,18 +532,11 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 
 	memset(buf, 0, BLK_SZ);
 
-	seg_entry.vblocks = 0;
-	seg_entry.mtime = 0;
-	orig_addr = buf;
-	size_t size = 0;
-	printf("\n preparing buf! ");
-	i = 0;
-	while (i < entries_in_blk) {
-		memcpy(buf + size, &seg_entry, sizeof(struct stl_seg_entry));
-		size = size +  sizeof(struct stl_seg_entry);
-		i = i + 1;
-	}
-	printf("\n Buf prepared");
+	printf("\n nr of seg entries: %llu", nr_seg_entries);
+	printf("\n nr of sit blks: %d", nr_sit_blks);
+	printf("\n");
+
+
 	i = 0;
 	buf = orig_addr;
 	while (i < nr_sit_blks) {
@@ -553,9 +546,12 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 		}
 		seg_entries_pba += BLK_SZ;
 		i++;
+		for (number of seg entries in the blk) {
+			seg_entry_ptr = (struct seg_entry * ) buf
+			printf("\n seg_entry.vblocks: %d", seg_entry_ptr->vblocks);
+			printf("\n seg_entry.mtime: %lld", seg_entry_ptr->mtime);
+		}
 	}
-	printf("\n seg_entry.vblocks: %d", seg_entry.vblocks);
-	printf("\n seg_entry.mtime: %lld", seg_entry.mtime);
 
 	free(buf);
 }
