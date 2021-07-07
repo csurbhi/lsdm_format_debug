@@ -320,15 +320,18 @@ void read_revmap(int fd, sector_t revmap_pba, unsigned nr_blks)
 {
    struct stl_revmap_entry_sector * revmap_sector;
    int ret = 0;
+   unsigned NR_REVMAP_ENTRIES_BLK = BLK_SIZE/sizeof(struct stl_revmap_entry_sector);
+   unsigned NR_REVMAP_ENTRIES_SEC = SECTOR_SIZE/sizeof(struct stl_revmap_entry_sector);
    revmap_sector = (struct stl_revmap_entry_sector *) malloc(BLK_SZ);
 
-   for(unsigned int i=0; i<nr_blks; i++){
+   for(unsigned int i=0; i< nr_blks; i++){
      ret = read_from_disk(fd, (char *) revmap_sector, BLK_SZ, revmap_pba);
-     for(unsigned int j=0; j< NR_SECTORS_IN_BLK; j++){
+     printf("\n *********************\n");
+     for(unsigned int j=0; j< NR_REVMAP_ENTRIES_BLK; j++){
      //for this function print which data ??
        printf("\n *********************\n");
 
-       for(int k=0; k< NR_EXT_ENTRIES_PER_SEC_for_Debug; k++){
+       for(int k=0; k< NR_REVMAP_ENTRIES_SEC; k++){
         printf("\n revmap_sector->crc: %lld", revmap_sector->extents[k].lba);
         printf("\n revmap_sector->extend[k].pba: %lld", revmap_sector->extents[k].pba);
         printf("\n revmap_sector->extend[k].len: %d", revmap_sector->extents[k].len);
@@ -352,7 +355,7 @@ void read_tm(int fd, sector_t tm_pba, unsigned nr_blks)
 
        for(unsigned int i=0; i<nr_blks; i++){
          ret = read_from_disk(fd, (char *) tm_entry_ptr, BLK_SZ, tm_pba);
-         for(unsigned int j=0; j< 8; j++){
+         for(unsigned int j=0; j< TM_ENTRIES_BLK ; j++){
          //for this function print which data ??
            printf("\n *********************\n");
            printf("\n tm_entry_ptr->lba: %lld", tm_entry_ptr->lba);
@@ -513,6 +516,7 @@ void read_ckpt(int fd, struct stl_sb * sb, unsigned long ckpt_pba)
 void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_pba)
 {
 	struct stl_seg_entry seg_entry;
+	struct stl_seg_entry * seg_entry_ptr;
 	unsigned entries_in_blk = BLK_SZ / sizeof(struct stl_seg_entry);
 	unsigned int nr_sit_blks = (nr_seg_entries)/entries_in_blk;
 	unsigned int i, ret;
@@ -546,8 +550,9 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 		}
 		seg_entries_pba += BLK_SZ;
 		i++;
-		for (number of seg entries in the blk) {
-			seg_entry_ptr = (struct seg_entry * ) buf
+		for (unsigned i =0 ; i < entries_in_blk; i++) {
+			seg_entry_ptr = (struct stl_seg_entry * ) buf;
+//            seg_entry = (struct stl_seg_entry * ) buf;
 			printf("\n seg_entry.vblocks: %d", seg_entry_ptr->vblocks);
 			printf("\n seg_entry.mtime: %lld", seg_entry_ptr->mtime);
 		}
@@ -556,14 +561,23 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 	free(buf);
 }
 
-void menu(int fd, unsigned long sectornr, sector_t revmap_pba, unsigned nr_blks, sector_t revmap_bm_pba, unsigned nr_blks_for_bitmap, u64 nr_seg_entries, unsigned long seg_entries_pba){
-	int menuNum;
+void menu(int fd, unsigned long sectornr,struct stl_sb * sb, unsigned long ckpt_pba, sector_t tm_pba, unsigned nr_blks_tm, sector_t revmap_pba, unsigned nr_blks, sector_t revmap_bm_pba, unsigned nr_blks_for_bitmap, u64 nr_seg_entries, unsigned long seg_entries_pba){
+//	int menuNum;
+    char menuNum;
+    start:
 	printf("1. Printing_SB\n");
     printf("2. Printing_Revmap\n");
     printf("3. Printing_Seg_info_table\n");
     printf("4. Printing_Revmap_BitMap\n");
-    printf("Input 1-4: ");
-    scanf("%d",&menuNum);
+    printf("5. Printing_ckpt\n");
+    printf("6. Printing_Read_Tm\n");
+    printf("7. EXIT\n");
+    printf("Input 1-7: ");
+
+    do {scanf("%hhd", &menuNum);}
+//    scanf("%d",&menuNum);
+
+    while((int) menuNum ==10);
 
     switch(menuNum)
     {
@@ -576,13 +590,25 @@ void menu(int fd, unsigned long sectornr, sector_t revmap_pba, unsigned nr_blks,
 	case 3: 
 		read_seg_info_table(fd, nr_seg_entries, seg_entries_pba);
 		break;
-    	case 4: 
+    case 4:
 		read_revmap_bitmap(fd, revmap_bm_pba,nr_blks_for_bitmap);
 		break;
-    	default:
+
+    case 5:
+        read_ckpt(fd, sb, ckpt_pba);
+        break;
+    case 6:
+         read_tm(fd, tm_pba, nr_blks_tm);
+         break;
+	case 7:
+    		exit(0);
+    default:
 		printf("Wrong input!\n");
-		exit(0);
+//		exit(0);
+        break;
     }
+
+    if (menuNum != '7') goto start;
 }
 
 
@@ -604,7 +630,7 @@ int main()
 	int fd = open_disk(blkdev);
 	sb1 = (struct stl_sb *)malloc(BLK_SZ);
 
-	menu(fd,0,sb1->revmap_pba,sb1->blk_count_revmap,sb1->revmap_bm_pba,sb1->blk_count_revmap_bm,sb1->zone_count, sb1->sit_pba);
+	menu(fd,0,sb1, sb1->ckpt1_pba,sb1->tm_pba, sb1->blk_count_tm, sb1->revmap_pba,sb1->blk_count_revmap,sb1->revmap_bm_pba,sb1->blk_count_revmap_bm,sb1->zone_count, sb1->sit_pba);
 
 
 
