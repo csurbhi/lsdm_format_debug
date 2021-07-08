@@ -243,7 +243,7 @@ __le64 get_zone0_pba(struct stl_sb *sb)
 	return sb->sit_pba + (sb->blk_count_sit * NR_SECTORS_IN_BLK);
 }
 
-void read_sb(int fd, unsigned long sectornr)
+struct stl_sb * read_sb(int fd, unsigned long sectornr)
 {
 	struct stl_sb *sb;
 	int ret = 0;
@@ -263,7 +263,6 @@ void read_sb(int fd, unsigned long sectornr)
 	}
 
 	ret = read(fd, sb, BLK_SZ);
-//         ret = read_from_disk(fd, (char *)sb, BLK_SZ, sectornr);
 	if (ret < 0) {
 		perror("\n COuld not read the sb: ");
 		exit(errno);
@@ -272,42 +271,39 @@ void read_sb(int fd, unsigned long sectornr)
 		printf("\n wrong superblock!");
 		exit(-1);
 	}
-//	printf("\n sb->magic: %d", sb->magic);
-//	printf("\n sb->version %d", sb->version);
-//	printf("\n sb->log_sector_size %d", sb->log_sector_size);
-//	printf("\n sb->log_block_size %d", sb->log_block_size);
-//	printf("\n sb->blk_count_ckpt %d", sb->blk_count_ckpt);
-//	//printf("\n sb-> %d", sb->);
-//	printf("\n sb->zone_count: %d", sb->zone_count);
+
+	return sb;
+}
+
+void print_sb(struct stl_sb *sb)
+{
 
 	printf("\n sb->magic: %d", sb->magic);
-    printf("\n sb->version %d", sb->version);
-    printf("\n sb->log_sector_size %d", sb->log_sector_size);
-    printf("\n sb->log_block_size %d", sb->log_block_size);
-    printf("\n sb->blk_count_ckpt %d", sb->blk_count_ckpt);
-    printf("\n sb->log_zone_size: %d", sb->log_zone_size);
-    printf("\n sb->checksum_offset %d", sb->checksum_offset);
-    printf("\n sb->zone_count %d", sb->zone_count);
-    printf("\n sb->blk_count_revmap_bm %d", sb->blk_count_revmap_bm);
-    printf("\n sb->blk_count_revmap %d", sb->blk_count_revmap);
+	printf("\n sb->version %d", sb->version);
+	printf("\n sb->log_sector_size %d", sb->log_sector_size);
+	printf("\n sb->log_block_size %d", sb->log_block_size);
+	printf("\n sb->blk_count_ckpt %d", sb->blk_count_ckpt);
+	printf("\n sb->log_zone_size: %d", sb->log_zone_size);
+	printf("\n sb->checksum_offset %d", sb->checksum_offset);
+	printf("\n sb->zone_count %d", sb->zone_count);
+	printf("\n sb->blk_count_revmap_bm %d", sb->blk_count_revmap_bm);
+	printf("\n sb->blk_count_revmap %d", sb->blk_count_revmap);
 
-    printf("\n sb->blk_count_tm: %d", sb->blk_count_tm);
-    printf("\n sb->blk_count_sit %d", sb->blk_count_sit);
-    printf("\n sb->zone_count_reserved %d", sb->zone_count_reserved);
-    printf("\n sb->zone_count_main %d", sb->zone_count_main);
-    printf("\n sb->revmap_pba %d", sb->revmap_pba);
-    printf("\n sb->tm_pba: %d", sb->tm_pba);
-    printf("\n sb->revmap_bm_pba %d", sb->revmap_bm_pba);
-    printf("\n sb->ckpt2_pba %d", sb->ckpt2_pba);
-    printf("\n sb->sit_pba %d",sb->sit_pba);
-    printf("\n sb->order_revmap_bm %d", sb->order_revmap_bm);
-    printf("\n sb->zone0_pba %d", sb->zone0_pba);
-    printf("\n sb->max_pba %d", sb->max_pba);
-    printf("\n sb->crc %d", sb->crc);
+	printf("\n sb->blk_count_tm: %d", sb->blk_count_tm);
+	printf("\n sb->blk_count_sit %d", sb->blk_count_sit);
+	printf("\n sb->zone_count_reserved %d", sb->zone_count_reserved);
+	printf("\n sb->zone_count_main %d", sb->zone_count_main);
+	printf("\n sb->revmap_pba %d", sb->revmap_pba);
+	printf("\n sb->tm_pba: %d", sb->tm_pba);
+	printf("\n sb->revmap_bm_pba %d", sb->revmap_bm_pba);
+	printf("\n sb->ckpt2_pba %d", sb->ckpt2_pba);
+	printf("\n sb->sit_pba %d",sb->sit_pba);
+	printf("\n sb->order_revmap_bm %d", sb->order_revmap_bm);
+	printf("\n sb->zone0_pba %d", sb->zone0_pba);
+	printf("\n sb->max_pba %d", sb->max_pba);
+	printf("\n sb->crc %d", sb->crc);
 
-	printf("\n Read verified!!!");
 	printf("\n ==================== \n");
-	free(sb);
 }
 
 __le64 get_max_pba(struct stl_sb *sb)
@@ -561,7 +557,7 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 	free(buf);
 }
 
-void menu(int fd, unsigned long sectornr)
+void menu(void)
 {
 
 	unsigned long ckpt_pba;
@@ -574,13 +570,18 @@ void menu(int fd, unsigned long sectornr)
 	u64 nr_seg_entries;
 	unsigned long seg_entries_pba;
 	int menuNum;
+	char * blkdev = "/dev/vdb";
 
-	struct stl_sb1 * sb1;
+
+	int fd = open_disk(blkdev);
+
+
+	struct stl_sb * sb1;
 
 	/* Can you please populate sb1 
 	 */
 
-	sb1 = read_sb()
+	sb1 = read_sb(fd, 0);
 
 	/* Separate the sb reading and printing. */
 
@@ -609,7 +610,7 @@ void menu(int fd, unsigned long sectornr)
 		switch(menuNum)
 		{
 			case 1: 
-				print_sb(fd,sectornr);
+				print_sb(sb1);
 				break;
 			case 2: 
 				read_revmap(fd, revmap_pba, nr_blks_revmap);
@@ -627,6 +628,8 @@ void menu(int fd, unsigned long sectornr)
 				read_tm(fd, tm_pba, nr_blks_tm);
 				break;
 			case 7:
+
+				free(sb1);
 				printf("\n");
 				exit(0);
 			default:
@@ -645,58 +648,7 @@ void menu(int fd, unsigned long sectornr)
 
 int main()
 {
-	unsigned int pba = 0;
-	struct stl_sb *sb1, *sb2;
-	char cmd[256];
-	unsigned long nrblks;
-	unsigned int ret = 0;
-
-	char * blkdev = "/dev/vdb";
-	int fd = open_disk(blkdev);
-	sb1 = (struct stl_sb *)malloc(BLK_SZ);
-
-	menu(fd,0);
-
-
-
-
-	/*
-	read_sb(fd, 0);
-	read_sb(fd, 8);
-	read_ckpt(fd, sb1, sb1->ckpt1_pba);
-	read_ckpt(fd, sb1, sb1->ckpt2_pba);
-    	read_revmap(fd, sb1->revmap_pba, sb1->blk_count_revmap);
-	nrblks = get_nr_blks(sb1);
-	printf("\n nrblks: %lu", nrblks);
-	printf("\n nrblks: %lu", nrblks);
-	read_tm(fd, sb1->tm_pba, sb1->blk_count_tm);
-	read_revmap_bitmap(fd, sb1->revmap_bm_pba, sb1->blk_count_revmap_bm);
-	read_ckpt(fd, sb1, sb1->ckpt1_pba);
-	printf("\n Checkpoint written at offset: %d", sb1->ckpt1_pba);
-	read_ckpt(fd, sb1, sb1->ckpt2_pba);
-	printf("\n Extent map written");
-	printf("\n sb1->zone_count: %d", sb1->zone_count);
-	read_seg_info_table(fd, sb1->zone_count, sb1->sit_pba);
-	printf("\n Segment Information Table written");
-	pba = 0;
-	read_ckpt(fd, sb1, sb1->ckpt1_pba);
-	free(sb1);
-	close(fd);
-	*/
-	/* 0 volume_size: 39321600  lsdm  blkdev: /dev/vdb tgtname: TL1 zone_lbas: 524288 data_end: 41418752 */
-	/*
-	unsigned long zone_lbas = 524288;
-	unsigned long data_zones = 28000;
-	char * tgtname = "TL1";
-	//volume_size = data_zones * zone_lbas;
-	unsigned long volume_size = 39321600;
-	unsigned long data_end = 41418752;
-	sprintf(cmd, "/sbin/dmsetup create TL1 --table '0 %ld lsdm %s %s %ld %ld'",
-            volume_size, blkdev, tgtname, zone_lbas,
-	    data_end);
-	printf("\n cmd: %s", cmd);
-    	//system(cmd);
-	*/
-	printf("\n \n");
+	
+	menu();
 	return(0);
 }
