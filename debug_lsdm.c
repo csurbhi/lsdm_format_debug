@@ -561,7 +561,7 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 	free(buf);
 }
 
-void menu(int fd, unsigned long sectornr,struct stl_sb * sb1)
+void menu(int fd, unsigned long sectornr)
 {
 
 	unsigned long ckpt_pba;
@@ -574,6 +574,15 @@ void menu(int fd, unsigned long sectornr,struct stl_sb * sb1)
 	u64 nr_seg_entries;
 	unsigned long seg_entries_pba;
 	int menuNum;
+
+	struct stl_sb1 * sb1;
+
+	/* Can you please populate sb1 
+	 */
+
+	sb1 = read_sb()
+
+	/* Separate the sb reading and printing. */
 
 	ckpt_pba = sb1->ckpt1_pba;
 	tm_pba = sb1->tm_pba;
@@ -600,7 +609,7 @@ void menu(int fd, unsigned long sectornr,struct stl_sb * sb1)
 		switch(menuNum)
 		{
 			case 1: 
-				read_sb(fd,sectornr);
+				print_sb(fd,sectornr);
 				break;
 			case 2: 
 				read_revmap(fd, revmap_pba, nr_blks_revmap);
@@ -646,7 +655,7 @@ int main()
 	int fd = open_disk(blkdev);
 	sb1 = (struct stl_sb *)malloc(BLK_SZ);
 
-	menu(fd,0,sb1);
+	menu(fd,0);
 
 
 
