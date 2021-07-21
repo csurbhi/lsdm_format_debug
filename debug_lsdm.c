@@ -314,7 +314,7 @@ __le64 get_max_pba(struct stl_sb *sb)
 
 void read_revmap(int fd, sector_t revmap_pba, unsigned nr_blks)
 {
-   struct stl_revmap_entry_sector * revmap_sector;
+ struct stl_revmap_entry_sector * revmap_sector;
    int ret = 0;
    unsigned NR_REVMAP_ENTRIES_BLK = BLK_SIZE/sizeof(struct stl_revmap_entry_sector);
    unsigned NR_REVMAP_ENTRIES_SEC = SECTOR_SIZE/sizeof(struct stl_revmap_entry_sector);
@@ -323,7 +323,7 @@ void read_revmap(int fd, sector_t revmap_pba, unsigned nr_blks)
 
    char * buf;
    buf = (char *) malloc(BLK_SZ);
-
+   	memset(buf, 0, BLK_SZ);
 //   for(unsigned i=0; i< nr_blks; i++){
 //     ret = read_from_disk(fd, (char *) revmap_sector, BLK_SZ, revmap_pba);
 //     printf("\n *********************\n");
@@ -368,20 +368,19 @@ void read_revmap(int fd, sector_t revmap_pba, unsigned nr_blks)
     }
 
   }
-  free(revmap_sector);
-
+  
 }
 
 void read_tm(int fd, sector_t tm_pba, unsigned nr_blks)
 {
-	printf("\n Writing tm blocks at pba: %llu, nrblks: %u", tm_pba/NR_SECTORS_IN_BLK, nr_blks);
+		printf("\n Writing tm blocks at pba: %llu, nrblks: %u", tm_pba/NR_SECTORS_IN_BLK, nr_blks);
 	 struct tm_entry * tm_entry_ptr;
 //	 struct tm_entry * buf;
 	 int ret = 0;
 
 
      unsigned i;
-	 char * buf;
+	 char *buf;
 	 buf = (char *) malloc(BLK_SZ);
 
 //       tm_entry_ptr = (struct tm_entry *) malloc(BLK_SZ);
@@ -419,9 +418,6 @@ void read_tm(int fd, sector_t tm_pba, unsigned nr_blks)
         }
 
       }
-
-
-
 }
 
 
@@ -612,7 +608,7 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 		for (unsigned i =0 ; i < entries_in_blk; i++) {
 //            seg_entry = (struct stl_seg_entry * ) buf;
 			printf("\n seg_entry.vblocks: %d", seg_entry_ptr->vblocks);
-
+		
 	         	printf("\n seg_entry.mtime: %lld", seg_entry_ptr->mtime);
 		        seg_entry_ptr++;
 		}
@@ -620,14 +616,14 @@ void read_seg_info_table(int fd, u64 nr_seg_entries, unsigned long seg_entries_p
 
 	}
 
-
+	
 }
 
 void menu(void)
 {
 
 	unsigned long ckpt_pba;
-	sector_t tm_pba;
+	sector_t tm_pba; 
 	unsigned int nr_blks_tm;
 	sector_t revmap_pba;
 	unsigned int nr_blks_revmap;
@@ -644,7 +640,7 @@ void menu(void)
 
 	struct stl_sb * sb1;
 
-	/* Can you please populate sb1
+	/* Can you please populate sb1 
 	 */
 
 	sb1 = read_sb(fd, 0);
@@ -677,13 +673,13 @@ void menu(void)
 
 	switch(menuNum)
 		{
-			case 1:
+			case 1: 
 				print_sb(sb1);
 				break;
-			case 2:
+			case 2: 
 				read_revmap(fd, revmap_pba, nr_blks_revmap);
 				break;
-			case 3:
+			case 3: 
 				read_seg_info_table(fd, nr_seg_entries, seg_entries_pba);
 				break;
 			case 4:
@@ -696,6 +692,7 @@ void menu(void)
 				read_tm(fd, tm_pba, nr_blks_tm);
 				break;
 			case 7:
+
 				free(sb1);
 				printf("\n");
 				exit(0);
@@ -717,7 +714,7 @@ void menu(void)
 
 int main()
 {
-
+	
 	menu();
 	return(0);
 }
